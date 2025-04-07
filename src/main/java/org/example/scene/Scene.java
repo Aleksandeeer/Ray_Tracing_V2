@@ -2,6 +2,7 @@ package org.example.scene;
 
 import org.example.math.Ray;
 import org.example.math.Vector3;
+import org.example.objects.HitResult;
 import org.example.objects.Hittable;
 import org.example.objects.Sphere;
 
@@ -36,56 +37,50 @@ public class Scene {
     }
 
     public Color trace(Ray ray) {
-        // Для каждого объекта сцены проверяем, есть ли пересечение с лучом
+        HitResult closestHit = null;
+        double closestT = Double.MAX_VALUE;
+
         for (Hittable object : objects) {
-            if (object.hit(ray)) {
-                // Если луч пересек объект, вычисляем точку пересечения
-                double t = getIntersection(ray, object);
-                Vector3 intersection = ray.getOrigin().add(ray.getDirection().multiply(t));  // Точка пересечения
-
-                // Получаем нормаль в точке пересечения
-                Vector3 normal = intersection.subtract(((Sphere) object).getCenter()).normalize(); // Для сферы
-                Color color = ((Sphere) object).getMaterial().getColor();
-
-                // Итерация по всем источникам света
-                for (Light light : lights) {
-                    Vector3 toLight = light.getPosition().subtract(intersection).normalize();  // Направление к источнику света
-
-                    // Проверка, не находится ли объект в тени (простейший способ: луч от объекта к источнику света)
-                    Ray shadowRay = new Ray(intersection.add(normal.multiply(0.001)), toLight); // Добавляем небольшой смещение, чтобы избежать самопересечений
-                    boolean inShadow = false;
-
-                    // Проверяем, есть ли объект между точкой пересечения и источником света
-                    for (Hittable obj : objects) {
-                        if (obj != object && obj.hit(shadowRay)) {
-                            inShadow = true; // Объект в тени
-                            break;
-                        }
-                    }
-
-                    // Если объект не в тени, то учитываем освещенность
-                    if (!inShadow) {
-                        // Простейшее диффузное освещение: интенсивность пропорциональна углу между нормалью и светом
-                        double brightness = Math.max(0, normal.dot(toLight));  // Косинус угла между нормалью и направлением на источник света
-
-                        // Умножаем цвет объекта на яркость
-                        int r = (int) (color.getRed() * brightness);
-                        int g = (int) (color.getGreen() * brightness);
-                        int b = (int) (color.getBlue() * brightness);
-
-                        // Возвращаем цвет с учетом освещенности
-                        return new Color(r, g, b);
-                    }
-                }
-
-                // Если объект не в тени и светит, возвращаем его цвет
-                return color;
+            HitResult hit = object.hit(ray);
+            if (hit != null && hit.t < closestT) {
+                closestT = hit.t;
+                closestHit = hit;
             }
         }
 
-        // Черный цвет, если луч не пересекает ни один объект
+        if (closestHit != null) {
+            Color color = closestHit.material.getColor();
+            double brightness = 0;
+
+            for (Light light : lights) {
+                Vector3 toLight = light.getPosition().subtract(closestHit.point).normalize();
+                Ray shadowRay = new Ray(closestHit.point.add(closestHit.normal.multiply(0.001)), toLight);
+
+                boolean inShadow = false;
+                for (Hittable object : objects) {
+                    HitResult shadowHit = object.hit(shadowRay);
+                    if (shadowHit != null && shadowHit.t < closestT) {
+                        inShadow = true;
+                        break;
+                    }
+                }
+
+                if (!inShadow) {
+                    brightness += Math.max(0, closestHit.normal.dot(toLight)) * light.getIntensity();
+                }
+            }
+
+            brightness = Math.min(brightness, 1.0);
+            return new Color(
+                    (int) (color.getRed() * brightness),
+                    (int) (color.getGreen() * brightness),
+                    (int) (color.getBlue() * brightness)
+            );
+        }
+
         return background_color;
     }
+
 
     // Метод для получения точки пересечения с объектом
     private double getIntersection(Ray ray, Hittable object) {

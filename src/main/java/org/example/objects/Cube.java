@@ -5,40 +5,55 @@ import org.example.math.Ray;
 import org.example.math.Vector3;
 
 public class Cube implements Hittable {
-    private final Vector3 position;
-    private final double size;
+    private final Vector3 min;
+    private final Vector3 max;
     private final Material material;
 
-    public Cube(Vector3 position, double size, Material material) {
-        this.position = position;
-        this.size = size;
+    public Cube(Vector3 center, double size, Material material) {
+        double half = size / 2;
+        this.min = center.subtract(new Vector3(half, half, half));
+        this.max = center.add(new Vector3(half, half, half));
         this.material = material;
     }
 
     @Override
-    public boolean hit(Ray ray) {
-        // Простая проверка на пересечение с кубом
-        // Для простоты, берем куб, расположенный вокруг центра в позиции 'position'
-        // и с размерами, равными 'size'
+    public HitResult hit(Ray ray) {
+        double tMin = (min.x - ray.getOrigin().x) / ray.getDirection().x;
+        double tMax = (max.x - ray.getOrigin().x) / ray.getDirection().x;
+        if (tMin > tMax) { double tmp = tMin; tMin = tMax; tMax = tmp; }
 
-        Vector3 min = position.subtract(new Vector3(size / 2, size / 2, size / 2));
-        Vector3 max = position.add(new Vector3(size / 2, size / 2, size / 2));
+        double tyMin = (min.y - ray.getOrigin().y) / ray.getDirection().y;
+        double tyMax = (max.y - ray.getOrigin().y) / ray.getDirection().y;
+        if (tyMin > tyMax) { double tmp = tyMin; tyMin = tyMax; tyMax = tmp; }
 
-        // Проверка пересечения с каждой гранью
-        double tmin = (min.x - ray.getOrigin().x) / ray.getDirection().x;
-        double tmax = (max.x - ray.getOrigin().x) / ray.getDirection().x;
+        if ((tMin > tyMax) || (tyMin > tMax)) return null;
 
-        if (tmin > tmax) {
-            double temp = tmin;
-            tmin = tmax;
-            tmax = temp;
-        }
+        if (tyMin > tMin) tMin = tyMin;
+        if (tyMax < tMax) tMax = tyMax;
 
-        // Проверка для остальных двух осей
-        return tmin > 0; // Для простоты, принимаем, что всегда существует пересечение
+        double tzMin = (min.z - ray.getOrigin().z) / ray.getDirection().z;
+        double tzMax = (max.z - ray.getOrigin().z) / ray.getDirection().z;
+        if (tzMin > tzMax) { double tmp = tzMin; tzMin = tzMax; tzMax = tmp; }
+
+        if ((tMin > tzMax) || (tzMin > tMax)) return null;
+
+        if (tzMin > tMin) tMin = tzMin;
+        if (tzMax < tMax) tMax = tzMax;
+
+        if (tMin < 0.001) return null;
+
+        Vector3 point = ray.getOrigin().add(ray.getDirection().multiply(tMin));
+        Vector3 normal = computeNormal(point);
+        return new HitResult(tMin, point, normal, material);
     }
 
-    public Material getMaterial() {
-        return material;
+    private Vector3 computeNormal(Vector3 point) {
+        double epsilon = 1e-4;
+        if (Math.abs(point.x - min.x) < epsilon) return new Vector3(-1, 0, 0);
+        if (Math.abs(point.x - max.x) < epsilon) return new Vector3(1, 0, 0);
+        if (Math.abs(point.y - min.y) < epsilon) return new Vector3(0, -1, 0);
+        if (Math.abs(point.y - max.y) < epsilon) return new Vector3(0, 1, 0);
+        if (Math.abs(point.z - min.z) < epsilon) return new Vector3(0, 0, -1);
+        return new Vector3(0, 0, 1);
     }
 }

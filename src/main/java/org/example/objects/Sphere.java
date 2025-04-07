@@ -15,25 +15,31 @@ public class Sphere implements Hittable {
         this.material = material;
     }
 
+    public Vector3 getCenter() {
+        return center;
+    }
+
+    public double getRadius() {
+        return radius;
+    }
+
     @Override
-    public boolean hit(Ray ray) {
+    public HitResult hit(Ray ray) {
         Vector3 oc = ray.getOrigin().subtract(center);
         double a = ray.getDirection().dot(ray.getDirection());
         double b = 2.0 * oc.dot(ray.getDirection());
         double c = oc.dot(oc) - radius * radius;
         double discriminant = b * b - 4 * a * c;
 
-        return discriminant > 0;
-    }
-    @Override
-    public Material getMaterial() {
-        return material;
-    }
+        if (discriminant > 0) {
+            double t = (-b - Math.sqrt(discriminant)) / (2.0 * a);
+            if (t > 0.001) {
+                Vector3 point = ray.getOrigin().add(ray.getDirection().multiply(t));
+                Vector3 normal = point.subtract(center).normalize();
+                return new HitResult(t, point, normal, material);
+            }
+        }
 
-    // Метод для получения центра сферы
-    public Vector3 getCenter() {
-        return center;
+        return null;
     }
-
-    public double getRadius() { return radius; }
 }

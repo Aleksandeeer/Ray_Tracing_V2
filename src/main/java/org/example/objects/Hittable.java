@@ -4,6 +4,6 @@ import org.example.material.Material;
 import org.example.math.Ray;
 
 public interface Hittable {
-    boolean hit(Ray ray);
-    Material getMaterial();
+    HitResult hit(Ray ray);
 }
+

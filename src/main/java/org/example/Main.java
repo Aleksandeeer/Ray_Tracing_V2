@@ -16,53 +16,39 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 
-
-
 public class Main {
-    public static final int WIDTH = 800;
-    public static final int HEIGHT = 600;
+    public static final int SCALER = 5;
+    public static final int WIDTH = 800 * SCALER;
+    public static final int HEIGHT = 600 * SCALER;
 
     public static void main(String[] args) throws IOException {
-        BufferedImage image;
-        Scene scene;
-        Camera camera;
+        BufferedImage image = new BufferedImage(WIDTH, HEIGHT, BufferedImage.TYPE_INT_RGB);
 
-        try (ProgressBar pb = new ProgressBar("Setting scene", 6)) {
-            image = new BufferedImage(WIDTH, HEIGHT, BufferedImage.TYPE_INT_RGB);
-            pb.step();
+        Scene scene = new Scene();
+        scene.setBackground_color(Color.WHITE);
 
-            scene = new Scene();
-            pb.step();
+        scene.addObject(new Sphere(new Vector3(0, 0, -5), 1, new Material(new Color(255, 0, 0), 0.5)));
+        scene.addObject(new Cube(new Vector3(-2, 0, -5), 2, new Material(new Color(0, 255, 0), 0.5)));
+        scene.addObject(new Cube(new Vector3(2, -1, -6), 1, new Material(new Color(0, 0, 255), 0.5)));
 
-            scene.setBackground_color(new Color(255, 255, 255));
-            pb.step();
+        scene.addLight(new Light(new Vector3(0, 5, 0), 1.0));
+        scene.addLight(new Light(new Vector3(-5, 5, -5), 0.5));
 
-            scene.addObject(new Sphere(new Vector3(0, 0, -5), 1,
-                    new Material(new Color(0, 255, 15), 0.5)));  // Сфера с красным материалом
-            pb.step();
-
-            scene.addLight(new Light(new Vector3(0, 5, -5), 1.0));  // Источник света
-            pb.step();
-
-            camera = new Camera(new Vector3(0, 0, 0), new Vector3(0, 0, -5), 90, WIDTH, HEIGHT);
-            pb.step();
-        }
+        Camera camera = new Camera(new Vector3(0, 0, 0), new Vector3(0, 0, -1), 60, WIDTH, HEIGHT);
 
         try (ProgressBar pb = new ProgressBar("Ray tracing", WIDTH * HEIGHT)) {
             for (int y = 0; y < HEIGHT; y++) {
                 for (int x = 0; x < WIDTH; x++) {
-                    pb.step();
                     Ray ray = camera.getRay(x, y);
-                    Color color = scene.trace(ray); // Трассировка луча
+                    Color color = scene.trace(ray);
                     image.setRGB(x, y, color.getRGB());
+                    pb.step();
                 }
             }
         }
 
-        try (ProgressBar pb = new ProgressBar("Saving file", 2)) {
-            File outputfile = new File("output.png");
-            pb.step();
-            ImageIO.write(image, "png", outputfile);
+        try (ProgressBar pb = new ProgressBar("Saving file", 1)) {
+            ImageIO.write(image, "png", new File("output.png"));
             pb.step();
         }
     }
