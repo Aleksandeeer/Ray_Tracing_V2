@@ -40,7 +40,9 @@ public class Scene {
     }
 
     public Color trace(Ray ray, int depth) {
-        if (depth <= 0) return background_color;
+        if (depth <= 0) {
+            return Color.BLACK; // достигли предела глубины трассировки
+        }
 
         HitResult closestHit = null;
         double closestT = Double.MAX_VALUE;
@@ -53,46 +55,59 @@ public class Scene {
             }
         }
 
-        if (closestHit != null) {
-            Material mat = closestHit.material;
-            Vector3 viewDir = ray.getDirection().negate();
+        // Если пересечений нет — возвращаем фон
+        if (closestHit == null) {
+            return background_color;
+        }
 
-            Vector3 ambient = ColorUtil.toVec(mat.getAmbient());
-            Vector3 diffuse = new Vector3(0, 0, 0);
-            Vector3 specular = new Vector3(0, 0, 0);
+        // Если материал рассеивает свет (например, стекло, зеркало и т.д.)
+        ScatterResult scatter = new ScatterResult();
+        if (closestHit.material.scatter(ray, closestHit, scatter)) {
+            Color scatteredColor = trace(scatter.scattered, depth - 1);
+            return multiplyColor(scatter.attenuation, scatteredColor);
+        }
 
-            for (Light light : lights) {
-                Vector3 lightDir = light.getPosition().subtract(closestHit.point).normalize();
+        // Иначе — применяем модель Фонга (нерассеивающие материалы: ламберт, фонг)
+        Material mat = closestHit.material;
+        Vector3 viewDir = ray.getDirection().negate();
 
-                // Тени
-                Ray shadowRay = new Ray(closestHit.point.add(closestHit.normal.multiply(0.001)), lightDir);
-                boolean inShadow = false;
-                for (Hittable object : objects) {
-                    HitResult shadowHit = object.hit(shadowRay);
-                    if (shadowHit != null && shadowHit.t > 0.001) {
-                        inShadow = true;
-                        break;
-                    }
-                }
+        Vector3 ambient = ColorUtil.toVec(mat.getAmbient());
+        Vector3 diffuse = new Vector3(0, 0, 0);
+        Vector3 specular = new Vector3(0, 0, 0);
 
-                if (!inShadow) {
-                    double diffFactor = Math.max(0, closestHit.normal.dot(lightDir));
-                    diffuse = ColorUtil.add(diffuse,
-                            ColorUtil.multiply(ColorUtil.toVec(mat.getDiffuse()), diffFactor * light.getIntensity()));
+        for (Light light : lights) {
+            Vector3 lightDir = light.getPosition().subtract(closestHit.point).normalize();
 
-                    Vector3 reflectDir = reflect(lightDir.negate(), closestHit.normal);
-                    double specFactor = Math.pow(Math.max(0, reflectDir.dot(viewDir)), mat.getShininess());
-                    specular = ColorUtil.add(specular,
-                            ColorUtil.multiply(ColorUtil.toVec(mat.getSpecular()), specFactor * light.getIntensity()));
+            // Проверка на тень
+            Ray shadowRay = new Ray(closestHit.point.add(closestHit.normal.multiply(0.001)), lightDir);
+            boolean inShadow = false;
+            for (Hittable object : objects) {
+                HitResult shadowHit = object.hit(shadowRay);
+                if (shadowHit != null && shadowHit.t > 0.001) {
+                    inShadow = true;
+                    break;
                 }
             }
 
-            Vector3 finalColor = ColorUtil.add(ambient, ColorUtil.add(diffuse, specular));
-            return ColorUtil.fromVec(finalColor);
+            if (!inShadow) {
+                // Diffuse
+                double diff = Math.max(0, closestHit.normal.dot(lightDir));
+                Vector3 diffuseComponent = ColorUtil.multiply(ColorUtil.toVec(mat.getDiffuse()), diff * light.getIntensity());
+                diffuse = ColorUtil.add(diffuse, diffuseComponent);
+
+                // Specular
+                Vector3 reflectDir = reflect(lightDir.negate(), closestHit.normal);
+                double specAngle = Math.max(0, reflectDir.dot(viewDir));
+                double spec = Math.pow(specAngle, mat.getShininess());
+                Vector3 specularComponent = ColorUtil.multiply(ColorUtil.toVec(mat.getSpecular()), spec * light.getIntensity());
+                specular = ColorUtil.add(specular, specularComponent);
+            }
         }
 
-        return background_color;
+        Vector3 finalColor = ColorUtil.add(ambient, ColorUtil.add(diffuse, specular));
+        return ColorUtil.fromVec(finalColor);
     }
+
 
     private Color multiplyColor(Color a, Color b) {
         return new Color(
