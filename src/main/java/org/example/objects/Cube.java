@@ -44,7 +44,7 @@ public class Cube implements Hittable {
 
         Vector3 point = ray.getOrigin().add(ray.getDirection().multiply(tMin));
         Vector3 normal = computeNormal(point);
-        return new HitResult(tMin, point, normal, material);
+        return new HitResult(tMin, point, normal, material, ray);
     }
 
     private Vector3 computeNormal(Vector3 point) {

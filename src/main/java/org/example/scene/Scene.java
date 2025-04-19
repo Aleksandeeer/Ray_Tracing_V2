@@ -1,5 +1,8 @@
 package org.example.scene;
 
+import org.example.material.Material;
+import org.example.material.ScatterResult;
+import org.example.math.ColorUtil;
 import org.example.math.Ray;
 import org.example.math.Vector3;
 import org.example.objects.HitResult;
@@ -36,7 +39,9 @@ public class Scene {
         return background_color;
     }
 
-    public Color trace(Ray ray) {
+    public Color trace(Ray ray, int depth) {
+        if (depth <= 0) return background_color;
+
         HitResult closestHit = null;
         double closestT = Double.MAX_VALUE;
 
@@ -49,36 +54,52 @@ public class Scene {
         }
 
         if (closestHit != null) {
-            Color color = closestHit.material.getColor();
-            double brightness = 0;
+            Material mat = closestHit.material;
+            Vector3 viewDir = ray.getDirection().negate();
+
+            Vector3 ambient = ColorUtil.toVec(mat.getAmbient());
+            Vector3 diffuse = new Vector3(0, 0, 0);
+            Vector3 specular = new Vector3(0, 0, 0);
 
             for (Light light : lights) {
-                Vector3 toLight = light.getPosition().subtract(closestHit.point).normalize();
-                Ray shadowRay = new Ray(closestHit.point.add(closestHit.normal.multiply(0.001)), toLight);
+                Vector3 lightDir = light.getPosition().subtract(closestHit.point).normalize();
 
+                // Тени
+                Ray shadowRay = new Ray(closestHit.point.add(closestHit.normal.multiply(0.001)), lightDir);
                 boolean inShadow = false;
                 for (Hittable object : objects) {
                     HitResult shadowHit = object.hit(shadowRay);
-                    if (shadowHit != null && shadowHit.t < closestT) {
+                    if (shadowHit != null && shadowHit.t > 0.001) {
                         inShadow = true;
                         break;
                     }
                 }
 
                 if (!inShadow) {
-                    brightness += Math.max(0, closestHit.normal.dot(toLight)) * light.getIntensity();
+                    double diffFactor = Math.max(0, closestHit.normal.dot(lightDir));
+                    diffuse = ColorUtil.add(diffuse,
+                            ColorUtil.multiply(ColorUtil.toVec(mat.getDiffuse()), diffFactor * light.getIntensity()));
+
+                    Vector3 reflectDir = reflect(lightDir.negate(), closestHit.normal);
+                    double specFactor = Math.pow(Math.max(0, reflectDir.dot(viewDir)), mat.getShininess());
+                    specular = ColorUtil.add(specular,
+                            ColorUtil.multiply(ColorUtil.toVec(mat.getSpecular()), specFactor * light.getIntensity()));
                 }
             }
 
-            brightness = Math.min(brightness, 1.0);
-            return new Color(
-                    (int) (color.getRed() * brightness),
-                    (int) (color.getGreen() * brightness),
-                    (int) (color.getBlue() * brightness)
-            );
+            Vector3 finalColor = ColorUtil.add(ambient, ColorUtil.add(diffuse, specular));
+            return ColorUtil.fromVec(finalColor);
         }
 
         return background_color;
+    }
+
+    private Color multiplyColor(Color a, Color b) {
+        return new Color(
+                (a.getRed() * b.getRed()) / 255,
+                (a.getGreen() * b.getGreen()) / 255,
+                (a.getBlue() * b.getBlue()) / 255
+        );
     }
 
 
@@ -99,6 +120,10 @@ public class Scene {
             }
         }
         return Double.MAX_VALUE;  // Если пересечения нет, возвращаем максимально возможное значение
+    }
+
+    private Vector3 reflect(Vector3 v, Vector3 normal) {
+        return v.subtract(normal.multiply(2 * v.dot(normal)));
     }
 
 }

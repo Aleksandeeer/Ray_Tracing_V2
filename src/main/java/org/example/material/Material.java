@@ -1,21 +1,16 @@
 package org.example.material;
 
+import org.example.math.Ray;
+import org.example.objects.HitResult;
+
 import java.awt.*;
 
-public class Material {
-    private final Color color;
-    private final double reflection;
-
-    public Material(Color color, double reflection) {
-        this.color = color;
-        this.reflection = reflection;
-    }
-
-    public Color getColor() {
-        return color;
-    }
-
-    public double getReflection() {
-        return reflection;
-    }
+public interface Material {
+    boolean scatter(Ray rayIn, HitResult hit, ScatterResult result);
+    Color getColor();  // базовый цвет
+    Color getAmbient();
+    Color getDiffuse();
+    Color getSpecular();
+    double getShininess();
 }
+

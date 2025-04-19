@@ -35,8 +35,8 @@ public class Sphere implements Hittable {
             double t = (-b - Math.sqrt(discriminant)) / (2.0 * a);
             if (t > 0.001) {
                 Vector3 point = ray.getOrigin().add(ray.getDirection().multiply(t));
-                Vector3 normal = point.subtract(center).normalize();
-                return new HitResult(t, point, normal, material);
+                Vector3 outwardNormal = point.subtract(center).normalize();
+                return new HitResult(t, point, outwardNormal, material, ray);
             }
         }
 

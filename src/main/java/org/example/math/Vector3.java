@@ -1,12 +1,19 @@
 package org.example.math;
 
+import java.util.Random;
+
 public class Vector3 {
     public final double x, y, z;
+    private static final Random rand = new Random();
 
     public Vector3(double x, double y, double z) {
         this.x = x;
         this.y = y;
         this.z = z;
+    }
+
+    public Vector3 negate() {
+        return new Vector3(-x, -y, -z);
     }
 
     public Vector3 add(Vector3 v) {
@@ -39,5 +46,24 @@ public class Vector3 {
         double cy = this.z * v.x - this.x * v.z;
         double cz = this.x * v.y - this.y * v.x;
         return new Vector3(cx, cy, cz);
+    }
+
+    public static Vector3 randomInUnitSphere() {
+        while (true) {
+            Vector3 p = new Vector3(
+                    rand.nextDouble() * 2 - 1,
+                    rand.nextDouble() * 2 - 1,
+                    rand.nextDouble() * 2 - 1
+            );
+            if (p.lengthSquared() < 1) return p;
+        }
+    }
+
+    public static Vector3 randomUnitVector() {
+        return randomInUnitSphere().normalize();
+    }
+
+    public double lengthSquared() {
+        return x * x + y * y + z * z;
     }
 }

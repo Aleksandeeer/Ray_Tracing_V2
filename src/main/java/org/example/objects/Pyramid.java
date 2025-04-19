@@ -54,7 +54,7 @@ public class Pyramid implements Hittable {
                 closestT = 0.001;
                 Vector3 point = ray.getOrigin().add(ray.getDirection().multiply(closestT));
                 Vector3 normal = side.getNormal();
-                closestHit = new HitResult(closestT, point, normal, material);
+                closestHit = new HitResult(closestT, point, normal, material, ray);
             }
         }
 
