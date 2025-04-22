@@ -30,7 +30,7 @@ public class TextureMaterial implements Material {
 
     @Override
     public Color getDiffuse(HitResult hit) {
-        return texture.getColor(hit.u, hit.v, hit.point); // нужно добавить u,v в HitResult
+        return texture.getColor(hit.u, hit.v, hit.point); // TODO: добавить u,v в HitResult (done)
     }
 
     @Override

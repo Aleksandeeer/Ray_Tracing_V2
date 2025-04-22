@@ -39,8 +39,8 @@ public class Main {
 
         // Diffuse
         Material redPhong = new PhongMaterial(new Color(255, 0, 0), 0.1, 0.7, 0.6, 64);
-        Material greenDiffuse = new DiffuseMaterial(new Color(0, 255, 0));
-        Material blueDiffuse = new DiffuseMaterial(new Color(0, 0, 255));
+        Material greenPhong = new PhongMaterial(new Color(0, 255, 0), 0.1, 0.7, 0.6, 64);
+        Material bluePhong = new PhongMaterial(new Color(0, 0, 255), 0.1, 0.7, 0.6, 64);
 
         // Glass
         Material glass = new GlassMaterial(1.5);
@@ -50,12 +50,12 @@ public class Main {
 
         // Объекты
         scene.addObject(new Sphere(new Vector3(0, 0, -5), 1, earth));
-        scene.addObject(new Sphere(new Vector3(-2, -1, -6), 0.5, greenDiffuse));
+        scene.addObject(new Sphere(new Vector3(-2, -1, -6), 0.5, greenPhong));
         scene.addObject(new Sphere(new Vector3(0, -1, -3), 0.5, glass));
         scene.addObject(new Sphere(new Vector3(-3, 0, -6), 1, redPhong));
 
         scene.addObject(new Cube(new Vector3(-2, 0, -5), 2, glass));
-        scene.addObject(new Cube(new Vector3(2, -1, -6), 1, blueDiffuse));
+        scene.addObject(new Cube(new Vector3(2, -1, -6), 1, bluePhong));
 
         // Источники света
         scene.addLight(new Light(new Vector3(0, 5, 0), 1.0));
