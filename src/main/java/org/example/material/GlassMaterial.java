@@ -43,17 +43,17 @@ public class GlassMaterial implements Material {
     }
 
     @Override
-    public Color getAmbient() {
+    public Color getAmbient(HitResult hit) {
         return new Color(20, 20, 20); // слабый свет вокруг
     }
 
     @Override
-    public Color getDiffuse() {
+    public Color getDiffuse(HitResult hit) {
         return new Color(0, 0, 0); // стекло почти не имеет диффузной составляющей
     }
 
     @Override
-    public Color getSpecular() {
+    public Color getSpecular(HitResult hit) {
         return new Color(255, 255, 255); // белые блики
     }
 

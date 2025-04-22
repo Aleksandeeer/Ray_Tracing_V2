@@ -71,7 +71,7 @@ public class Scene {
         Material mat = closestHit.material;
         Vector3 viewDir = ray.getDirection().negate();
 
-        Vector3 ambient = ColorUtil.toVec(mat.getAmbient());
+        Vector3 ambient = ColorUtil.toVec(mat.getAmbient(closestHit));
         Vector3 diffuse = new Vector3(0, 0, 0);
         Vector3 specular = new Vector3(0, 0, 0);
 
@@ -92,14 +92,14 @@ public class Scene {
             if (!inShadow) {
                 // Diffuse
                 double diff = Math.max(0, closestHit.normal.dot(lightDir));
-                Vector3 diffuseComponent = ColorUtil.multiply(ColorUtil.toVec(mat.getDiffuse()), diff * light.getIntensity());
+                Vector3 diffuseComponent = ColorUtil.multiply(ColorUtil.toVec(mat.getDiffuse(closestHit)), diff * light.getIntensity());
                 diffuse = ColorUtil.add(diffuse, diffuseComponent);
 
                 // Specular
                 Vector3 reflectDir = reflect(lightDir.negate(), closestHit.normal);
                 double specAngle = Math.max(0, reflectDir.dot(viewDir));
                 double spec = Math.pow(specAngle, mat.getShininess());
-                Vector3 specularComponent = ColorUtil.multiply(ColorUtil.toVec(mat.getSpecular()), spec * light.getIntensity());
+                Vector3 specularComponent = ColorUtil.multiply(ColorUtil.toVec(mat.getSpecular(closestHit)), spec * light.getIntensity());
                 specular = ColorUtil.add(specular, specularComponent);
             }
         }

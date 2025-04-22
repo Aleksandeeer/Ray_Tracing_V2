@@ -8,9 +8,9 @@ import java.awt.*;
 public interface Material {
     boolean scatter(Ray rayIn, HitResult hit, ScatterResult result);
     Color getColor();  // базовый цвет
-    Color getAmbient();
-    Color getDiffuse();
-    Color getSpecular();
+    Color getAmbient(HitResult hit);
+    Color getSpecular(HitResult hit);
+    Color getDiffuse(HitResult hit);
     double getShininess();
 }
 

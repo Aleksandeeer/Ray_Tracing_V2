@@ -30,17 +30,17 @@ public class PhongMaterial implements Material {
     }
 
     @Override
-    public Color getAmbient() {
+    public Color getAmbient(HitResult hit) {
         return scaleColor(color, ka);
     }
 
     @Override
-    public Color getDiffuse() {
+    public Color getDiffuse(HitResult hit) {
         return scaleColor(color, kd);
     }
 
     @Override
-    public Color getSpecular() {
+    public Color getSpecular(HitResult hit) {
         return new Color(255, 255, 255); // белый блик
     }
 

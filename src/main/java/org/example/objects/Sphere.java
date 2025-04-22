@@ -4,6 +4,8 @@ import org.example.material.Material;
 import org.example.math.Ray;
 import org.example.math.Vector3;
 
+import static org.example.objects.HitResult.getSphereUV;
+
 public class Sphere implements Hittable {
     private final Vector3 center;
     private final double radius;
@@ -36,10 +38,16 @@ public class Sphere implements Hittable {
             if (t > 0.001) {
                 Vector3 point = ray.getOrigin().add(ray.getDirection().multiply(t));
                 Vector3 outwardNormal = point.subtract(center).normalize();
-                return new HitResult(t, point, outwardNormal, material, ray);
+
+                // 👉 Получаем координаты текстуры
+                Vector3 localPoint = point.subtract(center).normalize(); // точка на сфере в нормализованных координатах
+                double[] uv = getSphereUV(localPoint);
+
+                return new HitResult(t, point, outwardNormal, material, ray, uv[0], uv[1]);
             }
         }
 
         return null;
     }
+
 }

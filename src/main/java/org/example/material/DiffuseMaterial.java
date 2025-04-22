@@ -25,17 +25,17 @@ public class DiffuseMaterial implements Material {
     }
 
     @Override
-    public Color getAmbient() {
+    public Color getAmbient(HitResult hit) {
         return scaleColor(baseColor, 0.1); // слабое общее освещение
     }
 
     @Override
-    public Color getDiffuse() {
+    public Color getDiffuse(HitResult hit) {
         return baseColor;
     }
 
     @Override
-    public Color getSpecular() {
+    public Color getSpecular(HitResult hit) {
         return new Color(0, 0, 0); // нет блика
     }
 
