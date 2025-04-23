@@ -1,4 +1,4 @@
-package org.example.textures;
+package org.example.material.textures;
 
 import org.example.math.Vector3;
 

@@ -9,7 +9,7 @@ import org.example.objects.Sphere;
 import org.example.scene.Camera;
 import org.example.scene.Light;
 import org.example.scene.Scene;
-import org.example.textures.*;
+import org.example.material.textures.*;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -18,7 +18,7 @@ import java.io.File;
 import java.io.IOException;
 
 public class Main {
-    public static final int SCALE = 5;
+    public static final int SCALE = 4;
     public static final int WIDTH = 800 * SCALE;
     public static final int HEIGHT = 600 * SCALE;
     public static final int MAX_DEPTH = 5;
@@ -32,10 +32,16 @@ public class Main {
 
         // Материалы
         // Texture
-        System.out.println("Working Directory = " + System.getProperty("user.dir"));
-
         Texture earthTexture = new ImageTexture("src/main/resources/earth.jpg");
+
+        SinusoidalTexture sinusoidalTexture = new SinusoidalTexture();
+        sinusoidalTexture.setBase(new Color(120, 110, 100));
+        sinusoidalTexture.setMultiply(100);
+        sinusoidalTexture.setVeined(new Color(200, 200, 200));
+
+        // TextureMaterial
         Material earth = new TextureMaterial(earthTexture);
+        Material sinusoidalMaterial = new TextureMaterial(sinusoidalTexture);
 
         // Diffuse
         Material redPhong = new PhongMaterial(new Color(255, 0, 0), 0.1, 0.7, 0.6, 64);
@@ -49,7 +55,7 @@ public class Main {
         Material metal = new MetalMaterial(new Color(192, 192, 192), 0.1);
 
         // Объекты
-        scene.addObject(new Sphere(new Vector3(0, 0, -5), 1, earth));
+        scene.addObject(new Sphere(new Vector3(0, 0, -5), 1, metal));
         scene.addObject(new Sphere(new Vector3(-2, -1, -6), 0.5, greenPhong));
         scene.addObject(new Sphere(new Vector3(0, -1, -3), 0.5, glass));
         scene.addObject(new Sphere(new Vector3(-3, 0, -6), 1, redPhong));

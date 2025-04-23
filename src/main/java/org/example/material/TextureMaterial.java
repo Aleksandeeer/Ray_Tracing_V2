@@ -2,7 +2,7 @@ package org.example.material;
 
 import org.example.math.Ray;
 import org.example.objects.HitResult;
-import org.example.textures.Texture;
+import org.example.material.textures.Texture;
 
 import java.awt.*;
 
