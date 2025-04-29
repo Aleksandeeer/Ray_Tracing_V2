@@ -1,5 +1,6 @@
 package org.example.scene;
 
+import org.example.material.GlassMaterial;
 import org.example.material.Material;
 import org.example.material.ScatterResult;
 import org.example.math.ColorUtil;
@@ -84,6 +85,10 @@ public class Scene {
             for (Hittable object : objects) {
                 HitResult shadowHit = object.hit(shadowRay);
                 if (shadowHit != null && shadowHit.t > 0.001) {
+                    if (shadowHit.material instanceof GlassMaterial) {
+                        // Пропускаем стекло — луч идёт дальше
+                        continue;
+                    }
                     inShadow = true;
                     break;
                 }
