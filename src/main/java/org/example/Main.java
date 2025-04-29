@@ -17,6 +17,12 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 
+// TODO: баги:
+// ! поменять стеклянный куб на стеклянную сферу
+
+// TODO: фичи:
+// ? Дополнительные материалы (пушистый)
+
 public class Main {
     public static final int SCALE = 4;
     public static final int WIDTH = 800 * SCALE;
