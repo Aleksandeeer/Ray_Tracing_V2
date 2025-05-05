@@ -3,6 +3,7 @@ package org.example.optimization;
 import org.example.math.Ray;
 import org.example.math.Vector3;
 
+// * Axis-Aligned Bounding Box (ограничивающий объём описывающий подмножество объектов)
 public class AABB {
     public final Vector3 min;
     public final Vector3 max;
