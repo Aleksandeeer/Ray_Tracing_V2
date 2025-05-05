@@ -3,6 +3,7 @@ package org.example.objects;
 import org.example.material.Material;
 import org.example.math.Ray;
 import org.example.math.Vector3;
+import org.example.optimization.AABB;
 
 public class Cube implements Hittable {
     private final Vector3 min;
@@ -55,5 +56,10 @@ public class Cube implements Hittable {
         if (Math.abs(point.y - max.y) < epsilon) return new Vector3(0, 1, 0);
         if (Math.abs(point.z - min.z) < epsilon) return new Vector3(0, 0, -1);
         return new Vector3(0, 0, 1);
+    }
+
+    @Override
+    public AABB getBoundingBox() {
+        return new AABB(min, max);
     }
 }

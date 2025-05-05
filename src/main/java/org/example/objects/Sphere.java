@@ -3,6 +3,7 @@ package org.example.objects;
 import org.example.material.Material;
 import org.example.math.Ray;
 import org.example.math.Vector3;
+import org.example.optimization.AABB;
 
 import static org.example.objects.HitResult.getSphereUV;
 
@@ -50,4 +51,9 @@ public class Sphere implements Hittable {
         return null;
     }
 
+    @Override
+    public AABB getBoundingBox() {
+        Vector3 offset = new Vector3(radius, radius, radius);
+        return new AABB(center.subtract(offset), center.add(offset));
+    }
 }

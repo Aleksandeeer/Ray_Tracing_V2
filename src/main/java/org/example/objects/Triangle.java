@@ -2,6 +2,7 @@ package org.example.objects;
 
 import org.example.math.Ray;
 import org.example.math.Vector3;
+import org.example.optimization.AABB;
 
 public class Triangle {
     private final Vector3 v0, v1, v2; // Вершины треугольника
@@ -40,5 +41,19 @@ public class Triangle {
 
     public Vector3 getNormal() {
         return normal;
+    }
+
+    public AABB getBoundingBox() {
+        Vector3 min = new Vector3(
+                Math.min(v0.x, Math.min(v1.x, v2.x)),
+                Math.min(v0.y, Math.min(v1.y, v2.y)),
+                Math.min(v0.z, Math.min(v1.z, v2.z))
+        );
+        Vector3 max = new Vector3(
+                Math.max(v0.x, Math.max(v1.x, v2.x)),
+                Math.max(v0.y, Math.max(v1.y, v2.y)),
+                Math.max(v0.z, Math.max(v1.z, v2.z))
+        );
+        return new AABB(min, max);
     }
 }

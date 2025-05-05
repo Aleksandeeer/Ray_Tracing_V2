@@ -13,9 +13,15 @@ import org.example.material.textures.*;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
+import java.util.List;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
 
 // TODO: баги:
 // ! поменять стеклянный куб на стеклянную сферу
@@ -73,6 +79,8 @@ public class Main {
         scene.addLight(new Light(new Vector3(0, 5, 0), 1.0));
         scene.addLight(new Light(new Vector3(-5, 5, -5), 0.5));
 
+        scene.buildBVH();
+
         // Камера
         Camera camera = new Camera(
                 new Vector3(0, 0, 0),
@@ -82,15 +90,45 @@ public class Main {
                 HEIGHT
         );
 
+        long startTime = System.nanoTime();
+
+        int threads = Runtime.getRuntime().availableProcessors();
+        ExecutorService executor = Executors.newFixedThreadPool(threads);
+        AtomicInteger pixelCounter = new AtomicInteger(0);
+        int[][] pixelBuffer = new int[HEIGHT][WIDTH];
+
         // Рендеринг сцены с прогресс-баром
         try (ProgressBar pb = new ProgressBar("Ray tracing", WIDTH * HEIGHT)) {
+            List<Future<?>> tasks = new ArrayList<>();
+
             for (int y = 0; y < HEIGHT; y++) {
-                for (int x = 0; x < WIDTH; x++) {
-                    Ray ray = camera.getRay(x, y);
-                    Color color = scene.trace(ray, MAX_DEPTH);
-                    image.setRGB(x, y, color.getRGB());
-                    pb.step();
+                final int row = y;
+                tasks.add(executor.submit(() -> {
+                    for (int x = 0; x < WIDTH; x++) {
+                        Ray ray = camera.getRay(x, row);
+                        Color color = scene.trace(ray, MAX_DEPTH);
+                        pixelBuffer[row][x] = color.getRGB();
+                        pb.step();
+                        pixelCounter.incrementAndGet();
+                    }
+                }));
+            }
+
+            for (Future<?> task : tasks) {
+                try {
+                    task.get();
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
+            }
+        }
+
+        long endTime = System.nanoTime();
+        executor.shutdown();
+
+        for (int y = 0; y < HEIGHT; y++) {
+            for (int x = 0; x < WIDTH; x++) {
+                image.setRGB(x, y, pixelBuffer[y][x]);
             }
         }
 
@@ -99,5 +137,9 @@ public class Main {
             ImageIO.write(image, "png", new File("output.png"));
             pb.step();
         }
+
+        double duration = (endTime - startTime) / 1_000_000_000.0;
+
+        System.out.println("Время рендеринга: " + String.format("%.2f", duration) + "c.");
     }
 }

@@ -3,6 +3,7 @@ package org.example.objects;
 import org.example.material.Material;
 import org.example.math.Ray;
 import org.example.math.Vector3;
+import org.example.optimization.AABB;
 
 public class Pyramid implements Hittable {
     private final Vector3 baseCenter;
@@ -60,4 +61,14 @@ public class Pyramid implements Hittable {
 
         return closestHit;
     }
+
+    @Override
+    public AABB getBoundingBox() {
+        AABB combined = sides[0].getBoundingBox();
+        for (int i = 1; i < sides.length; i++) {
+            combined = AABB.surroundingBox(combined, sides[i].getBoundingBox());
+        }
+        return combined;
+    }
+
 }

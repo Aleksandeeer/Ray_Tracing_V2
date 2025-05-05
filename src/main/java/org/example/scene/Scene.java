@@ -9,20 +9,17 @@ import org.example.math.Vector3;
 import org.example.objects.HitResult;
 import org.example.objects.Hittable;
 import org.example.objects.Sphere;
+import org.example.optimization.BVHNode;
 
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class Scene {
-    private final List<Hittable> objects;
-    private final List<Light> lights;
+    private final List<Hittable> objects = new ArrayList<>();
+    private final List<Light> lights = new ArrayList<>();
+    private Hittable rootBVH; // корень BVH
     private Color background_color;
-
-    public Scene() {
-        objects = new ArrayList<>();
-        lights = new ArrayList<>();
-    }
 
     public void addObject(Hittable object) {
         objects.add(object);
@@ -40,35 +37,25 @@ public class Scene {
         return background_color;
     }
 
+    public void buildBVH() {
+        rootBVH = new BVHNode(objects); // построить дерево после добавления всех объектов
+    }
+
     public Color trace(Ray ray, int depth) {
-        if (depth <= 0) {
-            return Color.BLACK; // достигли предела глубины трассировки
-        }
+        if (depth <= 0) return Color.BLACK;
 
-        HitResult closestHit = null;
-        double closestT = Double.MAX_VALUE;
-
-        for (Hittable object : objects) {
-            HitResult hit = object.hit(ray);
-            if (hit != null && hit.t < closestT) {
-                closestT = hit.t;
-                closestHit = hit;
-            }
-        }
-
-        // Если пересечений нет — возвращаем фон
+        HitResult closestHit = rootBVH.hit(ray);
         if (closestHit == null) {
             return background_color;
         }
 
-        // Если материал рассеивает свет (например, стекло, зеркало и т.д.)
         ScatterResult scatter = new ScatterResult();
         if (closestHit.material.scatter(ray, closestHit, scatter)) {
             Color scatteredColor = trace(scatter.scattered, depth - 1);
             return multiplyColor(scatter.attenuation, scatteredColor);
         }
 
-        // Иначе — применяем модель Фонга (нерассеивающие материалы: ламберт, фонг)
+        // Фонг-освещение
         Material mat = closestHit.material;
         Vector3 viewDir = ray.getDirection().negate();
 
@@ -78,29 +65,21 @@ public class Scene {
 
         for (Light light : lights) {
             Vector3 lightDir = light.getPosition().subtract(closestHit.point).normalize();
-
-            // Проверка на тень
-            Ray shadowRay = new Ray(closestHit.point.add(closestHit.normal.multiply(0.001)), lightDir);
+            Ray shadowRay = new Ray(closestHit.point.add(closestHit.normal.multiply(0.01)), lightDir);
             boolean inShadow = false;
-            for (Hittable object : objects) {
-                HitResult shadowHit = object.hit(shadowRay);
-                if (shadowHit != null && shadowHit.t > 0.001) {
-                    if (shadowHit.material instanceof GlassMaterial) {
-                        // Пропускаем стекло — луч идёт дальше
-                        continue;
-                    }
+
+            HitResult shadowHit = rootBVH.hit(shadowRay);
+            if (shadowHit != null && shadowHit.t > 0.001) {
+                if (!(shadowHit.material instanceof GlassMaterial)) {
                     inShadow = true;
-                    break;
                 }
             }
 
             if (!inShadow) {
-                // Diffuse
                 double diff = Math.max(0, closestHit.normal.dot(lightDir));
                 Vector3 diffuseComponent = ColorUtil.multiply(ColorUtil.toVec(mat.getDiffuse(closestHit)), diff * light.getIntensity());
                 diffuse = ColorUtil.add(diffuse, diffuseComponent);
 
-                // Specular
                 Vector3 reflectDir = reflect(lightDir.negate(), closestHit.normal);
                 double specAngle = Math.max(0, reflectDir.dot(viewDir));
                 double spec = Math.pow(specAngle, mat.getShininess());
@@ -113,7 +92,6 @@ public class Scene {
         return ColorUtil.fromVec(finalColor);
     }
 
-
     private Color multiplyColor(Color a, Color b) {
         return new Color(
                 (a.getRed() * b.getRed()) / 255,
@@ -122,28 +100,7 @@ public class Scene {
         );
     }
 
-
-    // Метод для получения точки пересечения с объектом
-    private double getIntersection(Ray ray, Hittable object) {
-        if (object instanceof Sphere) {
-            Sphere sphere = (Sphere) object;
-            Vector3 oc = ray.getOrigin().subtract(sphere.getCenter());
-            double a = ray.getDirection().dot(ray.getDirection());
-            double b = 2.0 * oc.dot(ray.getDirection());
-            double c = oc.dot(oc) - sphere.getRadius() * sphere.getRadius();
-            double discriminant = b * b - 4 * a * c;
-            if (discriminant > 0) {
-                double t = (-b - Math.sqrt(discriminant)) / (2.0 * a);
-                if (t > 0) {
-                    return t;
-                }
-            }
-        }
-        return Double.MAX_VALUE;  // Если пересечения нет, возвращаем максимально возможное значение
-    }
-
     private Vector3 reflect(Vector3 v, Vector3 normal) {
         return v.subtract(normal.multiply(2 * v.dot(normal)));
     }
-
 }

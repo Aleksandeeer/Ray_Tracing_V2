@@ -16,6 +16,15 @@ public class Vector3 {
         return new Vector3(-x, -y, -z);
     }
 
+    public double get(int index) {
+        return switch (index) {
+            case 0 -> x;
+            case 1 -> y;
+            case 2 -> z;
+            default -> throw new IllegalArgumentException("Invalid axis index: " + index);
+        };
+    }
+
     public Vector3 add(Vector3 v) {
         return new Vector3(x + v.x, y + v.y, z + v.z);
     }
