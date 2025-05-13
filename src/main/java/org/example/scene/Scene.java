@@ -9,6 +9,7 @@ import org.example.math.Vector3;
 import org.example.objects.HitResult;
 import org.example.objects.Hittable;
 import org.example.objects.Sphere;
+import org.example.optimization.AABB;
 import org.example.optimization.BVHNode;
 
 import java.awt.*;
@@ -38,13 +39,40 @@ public class Scene {
     }
 
     public void buildBVH() {
-        rootBVH = new BVHNode(objects); // * построить дерево после добавления всех объектов
+        List<Hittable> finite = new ArrayList<>();
+        for (Hittable object : objects) {
+            AABB box = object.getBoundingBox();
+            if (box != null) {
+                finite.add(object); // только объекты с bounding box
+            }
+        }
+        rootBVH = new BVHNode(finite);
     }
 
     public Color trace(Ray ray, int depth) {
         if (depth <= 0) return Color.BLACK;
 
-        HitResult closestHit = rootBVH.hit(ray);
+        HitResult closestHit = null;
+        double closestT = Double.MAX_VALUE;
+
+        // 1. Проверка через BVH
+        if (rootBVH != null) {
+            HitResult bvhHit = rootBVH.hit(ray);
+            if (bvhHit != null && bvhHit.t < closestT) {
+                closestT = bvhHit.t;
+                closestHit = bvhHit;
+            }
+        }
+
+        // 2. Проверка оставшихся объектов напрямую (например, Plane)
+        for (Hittable object : objects) {
+            HitResult hit = object.hit(ray);
+            if (hit != null && hit.t < closestT) {
+                closestT = hit.t;
+                closestHit = hit;
+            }
+        }
+
         if (closestHit == null) {
             return background_color;
         }
@@ -55,60 +83,68 @@ public class Scene {
             return multiplyColor(scatter.attenuation, scatteredColor);
         }
 
-        // * Освещение
+        // === Фонг-освещение ===
         Material mat = closestHit.material;
         Vector3 viewDir = ray.getDirection().negate();
 
-        // ? "ambient" - Фоновое свечение
-        // ? "diffuse" - Ламбертовское рассеяние
-        // ? "specular" - Блик (по модели Фонга)
-        // ? "shininess" - Жёсткость блика (экспонента в Math.pow)
         Vector3 ambient = ColorUtil.toVec(mat.getAmbient(closestHit));
         Vector3 diffuse = new Vector3(0, 0, 0);
         Vector3 specular = new Vector3(0, 0, 0);
 
         for (Light light : lights) {
-            // Вектор от точки пересечения к источнику света
             Vector3 lightDir = light.getPosition().subtract(closestHit.point).normalize();
-            // Сдвигаем точку немного вдоль нормали, чтобы избежать самопересечения при вычислении теней
             Ray shadowRay = new Ray(closestHit.point.add(closestHit.normal.multiply(0.01)), lightDir);
             boolean inShadow = false;
 
-            // Проверка, находится ли точка в тени (есть ли что-то между точкой и светом)
-            HitResult shadowHit = rootBVH.hit(shadowRay);
+            // === Тени (тоже BVH + полный список)
+            HitResult shadowHit = null;
+            double shadowT = Double.MAX_VALUE;
+
+            if (rootBVH != null) {
+                HitResult bvhShadowHit = rootBVH.hit(shadowRay);
+                if (bvhShadowHit != null && bvhShadowHit.t < shadowT) {
+                    shadowT = bvhShadowHit.t;
+                    shadowHit = bvhShadowHit;
+                }
+            }
+
+            for (Hittable object : objects) {
+                HitResult hit = object.hit(shadowRay);
+                if (hit != null && hit.t < shadowT) {
+                    shadowT = hit.t;
+                    shadowHit = hit;
+                }
+            }
+
             if (shadowHit != null && shadowHit.t > 0.001) {
                 if (!(shadowHit.material instanceof GlassMaterial)) {
                     inShadow = true;
                 }
             }
 
-            // Если не в тени — применяем модель освещения
             if (!inShadow) {
-                // * "Diffuse" по Ламберту
-                // Угол между нормалью и направлением на свет (dot product)
                 double diff = Math.max(0, closestHit.normal.dot(lightDir));
-                // Цвет диффузного отражения = базовый цвет * интенсивность света * cos(угла)
-                Vector3 diffuseComponent = ColorUtil.multiply(ColorUtil.toVec(mat.getDiffuse(closestHit)), diff * light.getIntensity());
+                Vector3 diffuseComponent = ColorUtil.multiply(
+                        ColorUtil.toVec(mat.getDiffuse(closestHit)),
+                        diff * light.getIntensity()
+                );
                 diffuse = ColorUtil.add(diffuse, diffuseComponent);
 
-                // * "Specular" по Фонгу
-                // Направление отражённого света
                 Vector3 reflectDir = reflect(lightDir.negate(), closestHit.normal);
-                // Угол между отражением и взглядом
                 double specAngle = Math.max(0, reflectDir.dot(viewDir));
-                // Зеркальное отражение по Фонгу: (cos)^shininess
                 double spec = Math.pow(specAngle, mat.getShininess());
-                // Цвет блика
-                Vector3 specularComponent = ColorUtil.multiply(ColorUtil.toVec(mat.getSpecular(closestHit)), spec * light.getIntensity());
+                Vector3 specularComponent = ColorUtil.multiply(
+                        ColorUtil.toVec(mat.getSpecular(closestHit)),
+                        spec * light.getIntensity()
+                );
                 specular = ColorUtil.add(specular, specularComponent);
             }
         }
 
-        // Суммирование всех компонентов освещения
         Vector3 finalColor = ColorUtil.add(ambient, ColorUtil.add(diffuse, specular));
-        // Преобразование итогового вектора в Color
         return ColorUtil.fromVec(finalColor);
     }
+
 
     private Color multiplyColor(Color a, Color b) {
         return new Color(

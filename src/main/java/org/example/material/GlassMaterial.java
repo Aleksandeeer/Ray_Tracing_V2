@@ -33,7 +33,7 @@ public class GlassMaterial implements Material {
             direction = RefractionUtil.refract(unitDir, hit.normal, etaRatio);
         }
 
-        result.scattered = new Ray(hit.point.add(direction.multiply(0.001)), direction);
+        result.scattered = new Ray(hit.point.add(direction.multiply(0.02)), direction);
         return true;
     }
 

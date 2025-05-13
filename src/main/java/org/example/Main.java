@@ -5,6 +5,7 @@ import org.example.material.*;
 import org.example.math.Ray;
 import org.example.math.Vector3;
 import org.example.objects.Cube;
+import org.example.objects.Plane;
 import org.example.objects.Sphere;
 import org.example.scene.Camera;
 import org.example.scene.Light;
@@ -33,7 +34,7 @@ public class Main {
     public static final int SCALE = 4;
     public static final int WIDTH = 800 * SCALE;
     public static final int HEIGHT = 600 * SCALE;
-    public static final int MAX_DEPTH = 5;
+    public static final int MAX_DEPTH = 15;
 
     public static void main(String[] args) throws IOException {
         BufferedImage image = new BufferedImage(WIDTH, HEIGHT, BufferedImage.TYPE_INT_RGB);
@@ -54,6 +55,13 @@ public class Main {
         // TextureMaterial
         Material earth = new TextureMaterial(earthTexture);
         Material sinusoidalMaterial = new TextureMaterial(sinusoidalTexture);
+        Material wallMaterial = new TextureMaterial(
+                new GradientTexture(
+                        new Color(170, 0, 255),
+                        new Color(255, 255, 255),
+                        -1.5, 5.0 // диапазон Y в сцене
+                )
+        );
 
         // Diffuse
         Material redPhong = new PhongMaterial(new Color(255, 0, 0), 0.1, 0.7, 0.6, 64);
@@ -66,18 +74,26 @@ public class Main {
         // Metal
         Material metal = new MetalMaterial(new Color(192, 192, 192), 0.1);
 
+        scene.addObject(new Plane(new Vector3(0, -6, 0), new Vector3(0, 1, 0), wallMaterial));  // потолок
+//        scene.addObject(new Plane(new Vector3(0, 5, 0),    new Vector3(0, -1, 0), wallMaterial)); // пол
+//        scene.addObject(new Plane(new Vector3(-12, 0, 0),   new Vector3(1, 0, 0), wallMaterial));  // левая стена
+//        scene.addObject(new Plane(new Vector3(12, 0, 0),    new Vector3(-1, 0, 0), wallMaterial)); // правая стена
+//        scene.addObject(new Plane(new Vector3(0, 0, -10),  new Vector3(0, 0, 1), wallMaterial));  // задняя стена
+//        scene.addObject(new Plane(new Vector3(0, 0, 5),    new Vector3(0, 0, -1), wallMaterial)); // передняя (если нужно)
+
+
         // Объекты
         scene.addObject(new Sphere(new Vector3(0, 0, -5), 1, metal));
         scene.addObject(new Sphere(new Vector3(-2, -1, -6), 0.5, greenPhong));
         scene.addObject(new Sphere(new Vector3(0, -1, -3), 0.5, glass));
         scene.addObject(new Sphere(new Vector3(-3, 0, -6), 1, redPhong));
 
-        scene.addObject(new Cube(new Vector3(-2, 0, -5), 2, glass));
+        scene.addObject(new Cube(new Vector3(-2, 0.5, -5), 2, glass));
         scene.addObject(new Cube(new Vector3(2, -1, -6), 1, bluePhong));
 
         // Источники света
-        scene.addLight(new Light(new Vector3(0, 5, 0), 1.0));
-        scene.addLight(new Light(new Vector3(-5, 5, -5), 0.5));
+        scene.addLight(new Light(new Vector3(0, 5, 0), 2));
+        scene.addLight(new Light(new Vector3(-5, 5, -5), 1.5));
 
         scene.buildBVH();
 
