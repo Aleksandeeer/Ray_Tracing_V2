@@ -31,7 +31,6 @@ public class Plane implements Hittable {
 
     @Override
     public AABB getBoundingBox() {
-        // Можно вернуть null или гигантский box, если используешь BVH
         return null;
     }
 }

@@ -40,7 +40,6 @@ public class Sphere implements Hittable {
                 Vector3 point = ray.getOrigin().add(ray.getDirection().multiply(t));
                 Vector3 outwardNormal = point.subtract(center).normalize();
 
-                // 👉 Получаем координаты текстуры
                 Vector3 localPoint = point.subtract(center).normalize(); // точка на сфере в нормализованных координатах
                 double[] uv = getSphereUV(localPoint);
 
