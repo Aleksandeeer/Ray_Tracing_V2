@@ -34,7 +34,7 @@ public class Main {
     public static final int SCALE = 4;
     public static final int WIDTH = 800 * SCALE;
     public static final int HEIGHT = 600 * SCALE;
-    public static final int MAX_DEPTH = 15;
+    public static final int MAX_DEPTH = 7;
 
     public static void main(String[] args) throws IOException {
         BufferedImage image = new BufferedImage(WIDTH, HEIGHT, BufferedImage.TYPE_INT_RGB);
@@ -48,9 +48,9 @@ public class Main {
         Texture earthTexture = new ImageTexture("src/main/resources/earth.jpg");
 
         SinusoidalTexture sinusoidalTexture = new SinusoidalTexture();
-        sinusoidalTexture.setBase(new Color(120, 110, 100));
+        sinusoidalTexture.setBase(new Color(255, 126, 0));
         sinusoidalTexture.setMultiply(100);
-        sinusoidalTexture.setVeined(new Color(200, 200, 200));
+        sinusoidalTexture.setVeined(new Color(0, 119, 255));
 
         // TextureMaterial
         Material earth = new TextureMaterial(earthTexture);
@@ -73,6 +73,23 @@ public class Main {
 
         // Metal
         Material metal = new MetalMaterial(new Color(192, 192, 192), 0.1);
+
+        Material wall2Material = new TextureMaterial(
+                new GradientTexture(
+                        new Color(255, 0, 0),
+                        new Color(0, 61, 255),
+                        -3, 5.0 // диапазон Y в сцене
+                )
+        );
+
+        Material backgroundMat = new TextureMaterial(
+                new GradientTexture(
+                        new Color(239, 239, 239), // bottom — светло-серый
+                        new Color(0, 70, 255),  // top — небесный синий
+                        -1.5, 3.0                 // диапазон Y сцены
+                )
+        );
+
 
         scene.addObject(new Plane(new Vector3(0, -6, 0), new Vector3(0, 1, 0), wallMaterial));  // потолок
 //        scene.addObject(new Plane(new Vector3(0, 5, 0),    new Vector3(0, -1, 0), wallMaterial)); // пол
@@ -114,48 +131,50 @@ public class Main {
         int[][] pixelBuffer = new int[HEIGHT][WIDTH];
 
         // Рендеринг сцены с прогресс-баром
+//
         try (ProgressBar pb = new ProgressBar("Ray tracing", WIDTH * HEIGHT)) {
             List<Future<?>> tasks = new ArrayList<>();
 
             for (int y = 0; y < HEIGHT; y++) {
-                final int row = y;
-                tasks.add(executor.submit(() -> {
-                    for (int x = 0; x < WIDTH; x++) {
-                        Ray ray = camera.getRay(x, row);
-                        Color color = scene.trace(ray, MAX_DEPTH);
-                        pixelBuffer[row][x] = color.getRGB();
-                        pb.step();
-                        pixelCounter.incrementAndGet();
-                    }
-                }));
-            }
-
-            for (Future<?> task : tasks) {
-                try {
-                    task.get();
-                } catch (Exception e) {
-                    e.printStackTrace();
+                //                tasks.add(executor.submit(() -> {
+                for (int x = 0; x < WIDTH; x++) {
+                    Ray ray = camera.getRay(x, y);
+                    Color color = scene.trace(ray, MAX_DEPTH);
+                    pixelBuffer[y][x] = color.getRGB();
+                    pb.step();
+                    pixelCounter.incrementAndGet();
+//                    }
+//                }));
+//            }
                 }
             }
-        }
+//            for (Future<?> task : tasks) {
+//                try {
+//                    task.get();
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//        }
 
-        long endTime = System.nanoTime();
-        executor.shutdown();
+            long endTime = System.nanoTime();
+            executor.shutdown();
 
-        for (int y = 0; y < HEIGHT; y++) {
-            for (int x = 0; x < WIDTH; x++) {
-                image.setRGB(x, y, pixelBuffer[y][x]);
+            for (int y = 0; y < HEIGHT; y++) {
+                for (int x = 0; x < WIDTH; x++) {
+                    image.setRGB(x, y, pixelBuffer[y][x]);
+                }
             }
+
+            // Сохранение изображения
+            try (ProgressBar progressBar = new ProgressBar("Saving file", 1)) {
+                ImageIO.write(image, "png", new File("output.png"));
+                progressBar.step();
+            }
+
+            double duration = (endTime - startTime) / 1_000_000_000.0;
+
+            System.out.println("Время рендеринга: " + String.format("%.2f", duration) + "c.");
         }
-
-        // Сохранение изображения
-        try (ProgressBar pb = new ProgressBar("Saving file", 1)) {
-            ImageIO.write(image, "png", new File("output.png"));
-            pb.step();
-        }
-
-        double duration = (endTime - startTime) / 1_000_000_000.0;
-
-        System.out.println("Время рендеринга: " + String.format("%.2f", duration) + "c.");
     }
 }

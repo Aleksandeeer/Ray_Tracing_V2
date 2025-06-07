@@ -13,8 +13,8 @@ public class SinusoidalTexture implements Texture {
     @Override
     public Color getColor(double u, double v, Vector3 point) {
         // Псевдошум: волны по координатам
-        double pattern = Math.sin(multiply * point.x + 5 * Math.sin(multiply * point.z))
-                + Math.sin(multiply * point.y + 5 * Math.sin(multiply * point.x));
+        double pattern = Math.sin(multiply * point.x + 1 * Math.sin(multiply * point.z))
+                + Math.sin(multiply * point.y + 1  * Math.sin(multiply * point.x));
 
         pattern = (Math.sin(pattern) + 1) / 2.0; // [0, 1]
 
