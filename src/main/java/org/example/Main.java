@@ -92,12 +92,6 @@ public class Main {
 
 
         scene.addObject(new Plane(new Vector3(0, -6, 0), new Vector3(0, 1, 0), wallMaterial));  // потолок
-//        scene.addObject(new Plane(new Vector3(0, 5, 0),    new Vector3(0, -1, 0), wallMaterial)); // пол
-//        scene.addObject(new Plane(new Vector3(-12, 0, 0),   new Vector3(1, 0, 0), wallMaterial));  // левая стена
-//        scene.addObject(new Plane(new Vector3(12, 0, 0),    new Vector3(-1, 0, 0), wallMaterial)); // правая стена
-//        scene.addObject(new Plane(new Vector3(0, 0, -10),  new Vector3(0, 0, 1), wallMaterial));  // задняя стена
-//        scene.addObject(new Plane(new Vector3(0, 0, 5),    new Vector3(0, 0, -1), wallMaterial)); // передняя (если нужно)
-
 
         // Объекты
         scene.addObject(new Sphere(new Vector3(0, 0, -5), 1, metal));
@@ -130,51 +124,49 @@ public class Main {
         AtomicInteger pixelCounter = new AtomicInteger(0);
         int[][] pixelBuffer = new int[HEIGHT][WIDTH];
 
-        // Рендеринг сцены с прогресс-баром
-//
+        // Рендеринг сцены с прогресс-баромMore actions
         try (ProgressBar pb = new ProgressBar("Ray tracing", WIDTH * HEIGHT)) {
             List<Future<?>> tasks = new ArrayList<>();
 
             for (int y = 0; y < HEIGHT; y++) {
-                //                tasks.add(executor.submit(() -> {
-                for (int x = 0; x < WIDTH; x++) {
-                    Ray ray = camera.getRay(x, y);
-                    Color color = scene.trace(ray, MAX_DEPTH);
-                    pixelBuffer[y][x] = color.getRGB();
-                    pb.step();
-                    pixelCounter.incrementAndGet();
-//                    }
-//                }));
-//            }
+                final int row = y;
+                tasks.add(executor.submit(() -> {
+                    for (int x = 0; x < WIDTH; x++) {
+                        Ray ray = camera.getRay(x, row);
+                        Color color = scene.trace(ray, MAX_DEPTH);
+                        pixelBuffer[row][x] = color.getRGB();
+                        pb.step();
+                        pixelCounter.incrementAndGet();
+                    }
+                }));
+            }
+
+            for (Future<?> task : tasks) {
+                try {
+                    task.get();
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
             }
-//            for (Future<?> task : tasks) {
-//                try {
-//                    task.get();
-//                } catch (Exception e) {
-//                    e.printStackTrace();
-//                }
-//            }
-//        }
-
-            long endTime = System.nanoTime();
-            executor.shutdown();
-
-            for (int y = 0; y < HEIGHT; y++) {
-                for (int x = 0; x < WIDTH; x++) {
-                    image.setRGB(x, y, pixelBuffer[y][x]);
-                }
-            }
-
-            // Сохранение изображения
-            try (ProgressBar progressBar = new ProgressBar("Saving file", 1)) {
-                ImageIO.write(image, "png", new File("output.png"));
-                progressBar.step();
-            }
-
-            double duration = (endTime - startTime) / 1_000_000_000.0;
-
-            System.out.println("Время рендеринга: " + String.format("%.2f", duration) + "c.");
         }
+        long endTime = System.nanoTime();
+        executor.shutdown();
+
+        for (int y = 0; y < HEIGHT; y++) {
+            for (int x = 0; x < WIDTH; x++) {
+                image.setRGB(x, y, pixelBuffer[y][x]);
+            }
+        }
+
+        // Сохранение изображения
+        try (ProgressBar progressBar = new ProgressBar("Saving file", 1)) {
+            ImageIO.write(image, "png", new File("output.png"));
+            progressBar.step();
+        }
+
+        double duration = (endTime - startTime) / 1_000_000_000.0;
+
+        System.out.println("Время рендеринга: " + String.format("%.2f", duration) + "c.");
     }
 }
+
