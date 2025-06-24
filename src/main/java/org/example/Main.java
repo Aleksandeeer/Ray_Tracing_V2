@@ -6,6 +6,7 @@ import org.example.math.Ray;
 import org.example.math.Vector3;
 import org.example.objects.Cube;
 import org.example.objects.Plane;
+import org.example.objects.Pyramid;
 import org.example.objects.Sphere;
 import org.example.scene.Camera;
 import org.example.scene.Light;
@@ -24,14 +25,12 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 
-// TODO: баги:
-// ! поменять стеклянный куб на стеклянную сферу
 
 // TODO: фичи:
 // ? Дополнительные материалы (пушистый)
 
 public class Main {
-    public static final int SCALE = 4;
+    public static final int SCALE = 2;
     public static final int WIDTH = 800 * SCALE;
     public static final int HEIGHT = 600 * SCALE;
     public static final int MAX_DEPTH = 7;
@@ -45,7 +44,7 @@ public class Main {
 
         // Материалы
         // Texture
-        Texture earthTexture = new ImageTexture("src/main/resources/earth.jpg");
+        Texture earthTexture = new ImageTexture("src/main/resources/chess.png");
 
         SinusoidalTexture sinusoidalTexture = new SinusoidalTexture();
         sinusoidalTexture.setBase(new Color(255, 126, 0));
@@ -62,6 +61,14 @@ public class Main {
                         -1.5, 5.0 // диапазон Y в сцене
                 )
         );
+        Material earthPhong = new TexturePhongMaterial(
+                new ImageTexture("src/main/resources/earth.jpg"),
+                new Color(30, 30, 30),               // ambient
+                new Color(255, 255, 255),            // specular
+                32                                   // shininess
+        );
+        scene.addObject(new Sphere(new Vector3(0, 0, -5), 1, earthPhong));
+
 
         // Diffuse
         Material redPhong = new PhongMaterial(new Color(255, 0, 0), 0.1, 0.7, 0.6, 64);
@@ -94,13 +101,20 @@ public class Main {
         scene.addObject(new Plane(new Vector3(0, -6, 0), new Vector3(0, 1, 0), wallMaterial));  // потолок
 
         // Объекты
-        scene.addObject(new Sphere(new Vector3(0, 0, -5), 1, metal));
+        scene.addObject(new Sphere(new Vector3(0, 0, -5), 1, earthPhong));
         scene.addObject(new Sphere(new Vector3(-2, -1, -6), 0.5, greenPhong));
         scene.addObject(new Sphere(new Vector3(0, -1, -3), 0.5, glass));
         scene.addObject(new Sphere(new Vector3(-3, 0, -6), 1, redPhong));
+        scene.addObject(new Pyramid(new Vector3(2, -0.25, -5), 1, 1, new Vector3(-1, 1, 0), glass));
 
         scene.addObject(new Cube(new Vector3(-2, 0.5, -5), 2, glass));
-        scene.addObject(new Cube(new Vector3(2, -1, -6), 1, bluePhong));
+        scene.addObject(new Cube(new Vector3(2, 0, -6), 1, bluePhong));
+
+        scene.addObject(new Pyramid(
+                new Vector3(-2, -2, -5), 1.2, 1,
+                new Vector3(0, 1, 0),
+                new PhongMaterial(new Color(255, 120, 0), 0.3, 0.6, 0.4, 10)
+        ));
 
         // Источники света
         scene.addLight(new Light(new Vector3(0, 5, 0), 2));
