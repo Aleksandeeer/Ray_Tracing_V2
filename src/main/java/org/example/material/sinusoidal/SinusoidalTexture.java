@@ -1,5 +1,6 @@
-package org.example.material.textures;
+package org.example.material.sinusoidal;
 
+import org.example.material.textures.Texture;
 import org.example.math.Vector3;
 
 import java.awt.*;

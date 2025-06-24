@@ -1,15 +1,14 @@
 package org.example.material;
 
 import org.example.math.Ray;
-import org.example.math.Vector3;
 import org.example.objects.HitResult;
 
 import java.awt.*;
 
-public class DiffuseMaterial implements Material {
+public class LambertMaterial implements Material {
     private final Color baseColor;
 
-    public DiffuseMaterial(Color baseColor) {
+    public LambertMaterial(Color baseColor) {
         this.baseColor = baseColor;
     }
 

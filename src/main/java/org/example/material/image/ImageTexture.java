@@ -1,5 +1,6 @@
-package org.example.material.textures;
+package org.example.material.image;
 
+import org.example.material.textures.Texture;
 import org.example.math.Vector3;
 
 import javax.imageio.ImageIO;

@@ -1,6 +1,7 @@
-package org.example.material;
+package org.example.material.textures;
 
-import org.example.material.textures.Texture;
+import org.example.material.Material;
+import org.example.material.ScatterResult;
 import org.example.math.Ray;
 import org.example.objects.HitResult;
 
