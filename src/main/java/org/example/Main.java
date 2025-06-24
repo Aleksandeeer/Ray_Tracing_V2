@@ -25,15 +25,14 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 
-
-// TODO: фичи:
-// ? Дополнительные материалы (пушистый)
-
 public class Main {
     public static final int SCALE = 2;
     public static final int WIDTH = 800 * SCALE;
     public static final int HEIGHT = 600 * SCALE;
     public static final int MAX_DEPTH = 7;
+
+    public static String EARTH = "src/main/resources/earth.jpg";
+    public static String CHESS = "src/main/resources/chess.png";
 
     public static void main(String[] args) throws IOException {
         BufferedImage image = new BufferedImage(WIDTH, HEIGHT, BufferedImage.TYPE_INT_RGB);
@@ -44,7 +43,7 @@ public class Main {
 
         // Материалы
         // Texture
-        Texture earthTexture = new ImageTexture("src/main/resources/chess.png");
+        Texture earthTexture = new ImageTexture(CHESS);
 
         SinusoidalTexture sinusoidalTexture = new SinusoidalTexture();
         sinusoidalTexture.setBase(new Color(255, 126, 0));
@@ -62,13 +61,12 @@ public class Main {
                 )
         );
         Material earthPhong = new TexturePhongMaterial(
-                new ImageTexture("src/main/resources/earth.jpg"),
+                new ImageTexture(EARTH),
                 new Color(30, 30, 30),               // ambient
                 new Color(255, 255, 255),            // specular
                 32                                   // shininess
         );
         scene.addObject(new Sphere(new Vector3(0, 0, -5), 1, earthPhong));
-
 
         // Diffuse
         Material redPhong = new PhongMaterial(new Color(255, 0, 0), 0.1, 0.7, 0.6, 64);
