@@ -3,6 +3,7 @@ package org.example.objects;
 import org.example.material.Material;
 import org.example.math.Ray;
 import org.example.math.Vector3;
+import org.example.objects.triangles.PyramidTriangle;
 import org.example.optimization.AABB;
 
 public class Pyramid implements Hittable {
@@ -14,7 +15,7 @@ public class Pyramid implements Hittable {
 
     private final Vector3 v0, v1, v2, v3;
     private final Vector3 apex;
-    private final Triangle[] sides;
+    private final PyramidTriangle[] sides;
 
     public Pyramid(Vector3 baseCenter, double size, double height, Vector3 direction, Material material) {
         this.baseCenter = baseCenter;
@@ -31,11 +32,11 @@ public class Pyramid implements Hittable {
 
         this.apex = baseCenter.add(direction.normalize().multiply(height));
 
-        this.sides = new Triangle[] {
-                new Triangle(v1, v0, apex),  // ← порядок важен
-                new Triangle(v2, v1, apex),
-                new Triangle(v3, v2, apex),
-                new Triangle(v0, v3, apex)
+        this.sides = new PyramidTriangle[] {
+                new PyramidTriangle(v1, v0, apex),  // ← порядок важен
+                new PyramidTriangle(v2, v1, apex),
+                new PyramidTriangle(v3, v2, apex),
+                new PyramidTriangle(v0, v3, apex)
         };
     }
 
@@ -44,7 +45,7 @@ public class Pyramid implements Hittable {
         HitResult closestHit = null;
         double closestT = Double.MAX_VALUE;
 
-        for (Triangle side : sides) {
+        for (PyramidTriangle side : sides) {
             HitResult hit = side.getDetailedHit(ray, 0.001, closestT, material);
             if (hit != null && hit.t < closestT) {
                 closestT = hit.t;

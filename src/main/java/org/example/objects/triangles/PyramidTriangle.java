@@ -1,15 +1,16 @@
-package org.example.objects;
+package org.example.objects.triangles;
 
 import org.example.material.Material;
 import org.example.math.Ray;
 import org.example.math.Vector3;
+import org.example.objects.HitResult;
 import org.example.optimization.AABB;
 
-public class Triangle {
+public class PyramidTriangle {
     private final Vector3 v0, v1, v2; // Вершины треугольника
     private final Vector3 normal;
 
-    public Triangle(Vector3 v0, Vector3 v1, Vector3 v2) {
+    public PyramidTriangle(Vector3 v0, Vector3 v1, Vector3 v2) {
         this.v0 = v0;
         this.v1 = v1;
         this.v2 = v2;

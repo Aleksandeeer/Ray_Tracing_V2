@@ -1,6 +1,6 @@
 package org.example.scene;
 
-import org.example.Main;
+import org.example.Constant;
 import org.example.math.Ray;
 import org.example.math.Vector3;
 
@@ -32,8 +32,8 @@ public class Camera {
     }
 
     public Ray getRay(int x, int y) {
-        double u = (x + 0.5) / (double) Main.WIDTH;  // 800 - ширина изображения
-        double v = (y + 0.5) / (double) Main.HEIGHT;  // 600 - высота изображения
+        double u = (x + 0.5) / (double) Constant.Scene_parameters.WIDTH;  // 800 - ширина изображения
+        double v = (y + 0.5) / (double) Constant.Scene_parameters.HEIGHT;  // 600 - высота изображения
 
         Vector3 direction = lowerLeftCorner.add(horizontal.multiply(u)).add(vertical.multiply(v)).subtract(origin);
         return new Ray(origin, direction);
