@@ -9,9 +9,6 @@ import org.example.material.textures.TexturePhongMaterial;
 import org.example.math.Ray;
 import org.example.math.Vector3;
 import org.example.objects.Plane;
-import org.example.objects.Sphere;
-import org.example.objects.triangles.ObjTriangle;
-import org.example.objects.triangles.PyramidTriangle;
 import org.example.objects.triangles.Triangle;
 import org.example.parser.ObjParser;
 import org.example.scene.Camera;
@@ -76,7 +73,7 @@ public class Main {
         Material bluePhong = new PhongMaterial(new Color(0, 0, 255), 0.1, 0.7, 0.6, 64);
 
         // * OBJECTS
-        scene.addObject(new Plane(new Vector3(0, -6, 0), new Vector3(0, 1, 0), backgroundMaterial));  // потолок
+        scene.addObject(new Plane(new Vector3(0, 3, 0), new Vector3(0, 1, 0), backgroundMaterial));  // потолок
 //
 //        scene.addObject(new Sphere(new Vector3(0, 0, -5), 1, earthPhong));
 //        scene.addObject(new Sphere(new Vector3(-2, -1, -6), 0.5, greenPhong));
@@ -92,17 +89,38 @@ public class Main {
 //
 //        scene.addObject(new Cube(new Vector3(-2, 0.5, -5), 2, glass));
 //        scene.addObject(new Cube(new Vector3(2, 0, -6), 1, bluePhong));
+        Material defaultMat = new PhongMaterial(new Color(48, 48, 48), 0.2, 0.6, 0.3, 16);
+        List<Triangle> model = ObjParser.load(Constant.TexturesPaths.PAWN_OBJ, earthPhong);
 
-        List<ObjTriangle> tris = ObjParser.load(Constant.TexturesPaths.PAWN_OBJ);
 
-        for (ObjTriangle tri : tris) {
-            scene.addObject(new Triangle(tri.v0, tri.v1, tri.v2, bluePhong));
+        Vector3 offset = new Vector3(0, 3, -15);
+        double scale = 6.0;
+
+        for (Triangle tri : model) {
+            scene.addObject(new Triangle(
+                    Constant.flipY(tri.getV0()).multiply(scale).add(offset),
+                    Constant.flipY(tri.getV1()).multiply(scale).add(offset),
+                    Constant.flipY(tri.getV2()).multiply(scale).add(offset),
+                    defaultMat
+            ));
+
+        }
+        offset = new Vector3(-2, 3, -10);
+        scale = 5.0;
+        for (Triangle tri : model) {
+            scene.addObject(new Triangle(
+                    Constant.flipY(tri.getV0()).multiply(scale).add(offset),
+                    Constant.flipY(tri.getV1()).multiply(scale).add(offset),
+                    Constant.flipY(tri.getV2()).multiply(scale).add(offset),
+                    defaultMat
+            ));
+
         }
 
-
         // * LIGHT
-        scene.addLight(new Light(new Vector3(0, 5, 0), 2));
+        scene.addLight(new Light(new Vector3(0, -5, 0), 2));
         scene.addLight(new Light(new Vector3(-5, 5, -5), 1.5));
+        scene.addLight(new Light(new Vector3(5, 2, 0), 1.0)); // дополнительный источник
 
         scene.buildBVH();
 
